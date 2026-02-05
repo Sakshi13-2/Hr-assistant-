@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en" class="dark-theme"> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>company Chatbot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;400;600;700;800&display=swap');
+        body { font-family: 'Poppins', sans-serif; }
+
+        /* --- Dark Theme Styles (Default) --- */
+        .dark-theme {
+            background-color: #0F172A; /* bg-slate-900 - Deeper dark blue */
+            color: #f1f5f9; /* text-slate-100 */
+        }---
+        .dark-theme .bg-primary-chat { background-color: #1E293B; /* bg-slate-800 */ }
+        .dark-theme .bg-secondary-chat { background-color: #0F172A; /* bg-slate-900 */ }
+        .dark-theme .text-secondary-chat { color: #cbd5e1; /* text-slate-300 */ }
+        .dark-theme .border-chat { border-color: #334155; /* border-slate-700 */ }
+        .dark-theme .user-bubble { background-color: #4F46E5; } /* indigo-600 */
+        .dark-theme .assistant-bubble { background-color: #1E293B; border: 1px solid #334155; }
+        .dark-theme .chat-input { box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); } 
+
+        /* --- Light Theme Styles --- */
+        .light-theme {
+            background-color: #f8fafc; /* bg-slate-50 */
+            color: #1e293b; /* text-slate-900 */
+        }
+        .light-theme .bg-primary-chat { background-color: #ffffff; /* bg-white */ }
+        .light-theme .bg-secondary-chat { background-color: #f1f5f9; /* bg-slate-100 */ }
+        .light-theme .text-secondary-chat { color: #475569; /* text-slate-600 */ }
+        .light-theme .border-chat { border-color: #e2e8f0; /* border-slate-200 */ }
+        .light-theme .user-bubble { background-color: #6366f1; color: white; } /* indigo-500 */
+        .light-theme .assistant-bubble { background-color: #ffffff; border: 1px solid #e2e8f0; }
+
+        /* General Custom styles */
+        .auth-input { transition: all 0.15s ease-in-out; }
+        /* Refined focus ring */
+        .auth-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.7); /* indigo-500 with opacity */
+        }
+
+        /* --- MODERN SCROLLBAR (New) --- */
+        /* For Webkit Browsers (Chrome, Safari) */
+        #chat-history::-webkit-scrollbar,
+        #history-list::-webkit-scrollbar,
+        #approval-list::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        .dark-theme #chat-history::-webkit-scrollbar-thumb,
+        .dark-theme #history-list::-webkit-scrollbar-thumb,
+        .dark-theme #approval-list::-webkit-scrollbar-thumb {
+            background-color: #475569; /* Slate 600 */
+            border-radius: 4px;
+            border: 2px solid #0F172A; /* Slate 900 background blend */
+        }
+
+        .light-theme #chat-history::-webkit-scrollbar-thumb,
+        .light-theme #history-list::-webkit-scrollbar-thumb,
+        .light-theme #approval-list::-webkit-scrollbar-thumb {
+            background-color: #94a3b8; /* Slate 400 */
+            border-radius: 4px;
+            border: 2px solid #f8fafc; /* Slate 50 background blend */
+        }
+        
+        /* Optional: Change the color on hover */
+        #chat-history::-webkit-scrollbar-thumb:hover,
+        #history-list::-webkit-scrollbar-thumb:hover,
+        #approval-list::-webkit-scrollbar-thumb:hover {
+            background-color: #64748b; /* Slate 500 */
+        }
+        
+        #chat-history::-webkit-scrollbar-track,
+        #history-list::-webkit-scrollbar-track,
+        #approval-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* --- TIME OFF MODAL STYLES (Minor tweaks) --- */
+        .modal-card {
+            background-color: #1e293b; /* bg-slate-800 */
+            border: 1px solid #334155;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+        .calendar-cell {
+            font-size: 1rem; 
+            width: calc(100% / 7); 
+            line-height: 1.5rem; 
+            transition: background-color 0.15s ease-in-out;
+        }
+        /* MODIFIED HOVER: Conflict cells should not show a hover state */
+        .calendar-cell:not(.conflict):not(.selected):hover { background-color: #334155; } 
+        .calendar-cell.today { border: 2px solid #6366f1; }
+        /* .selected class now handles all selected dates, replacing .range */
+        .calendar-cell.selected { background-color: #4f46e5; color: white; } 
+        .calendar-cell.conflict { 
+            background-color: #ef4444; /* red-500 */
+            color: white; 
+            cursor: not-allowed; /* New style for conflict */
+            box-shadow: inset 0 0 0 2px #f87171; /* Subtle inner border for contrast */
+        }
+        
+        /* --- LOGIN 3D / GLASS STYLES (Refined) --- */
+        .auth-container-bg {
+            background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 80%); 
+        }
+        .auth-card {
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            /* Refined Glassmorphism */
+            background-color: rgba(30, 41, 59, 0.7); /* Slightly more transparent */
+            backdrop-filter: blur(10px); /* Stronger blur */
+            border: 1px solid rgba(100, 116, 139, 0.2); /* Lighter subtle border */
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .auth-card:hover {
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 1), 0 0 0 5px rgba(99, 102, 241, 0.1); /* Darker shadow, subtle glow */
+            transform: translateY(-10px) scale(1.05); /* More pronounced lift and scale */
+        }
+        
+        @keyframes subtle-float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
+            100% { transform: translateY(0); }
+        }
+        #auth-title { animation: subtle-float 4s ease-in-out infinite; }
+    </style>
+</head>
+<body class="w-screen h-screen flex transition-colors duration-300 overflow-hidden">
+    
+    <div id="auth-container" class="fixed inset-0 z-50 flex items-center justify-center auth-container-bg transition-opacity duration-300">
+        <div class="w-full max-w-sm p-8 rounded-2xl shadow-3xl auth-card transform transition-transform duration-300 ease-in-out scale-100">
+            
+            <h2 id="auth-title" class="text-3xl font-extrabold text-center text-indigo-400 mb-8 transition-colors duration-300 tracking-wider">company Access</h2>
+            
+            <form id="auth-form" onsubmit="event.preventDefault(); handleAuthSubmit()">
+                
+                <div id="name-field" class="mb-4 hidden">
+                    <label for="name" class="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
+                    <input type="text" id="name" name="name" placeholder="John Doe" 
+                            class="auth-input w-full p-4 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 transition duration-150">
+                </div>
+
+                <div class="mb-4">
+                    <label for="email" class="block text-sm font-medium text-gray-300 mb-1">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="you@company.com" required 
+                            class="auth-input w-full p-4 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 transition duration-150">
+                </div>
+
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-300 mb-1">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required 
+                            class="auth-input w-full p-4 rounded-xl bg-gray-800 border border-gray-700 text-white placeholder-gray-400 transition duration-150">
+                </div>
+                
+                <div id="forgot-password-link" class="text-right mb-6">
+                    <a href="#" class="text-sm text-indigo-400 hover:text-indigo-300 transition duration-150">Forgot Password?</a>
+                </div>
+
+                <button id="auth-button" type="submit" 
+                        class="w-full p-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-500/50 transition duration-300 transform hover:scale-[1.01] tracking-wider">
+                    LOG IN
+                </button>
+            </form>
+
+            <div class="mt-8 text-center text-gray-400">
+                <span id="toggle-text">Don't have an account?</span>
+                <button id="toggle-link" onclick="toggleForm()" class="text-indigo-400 font-semibold hover:text-indigo-300 transition duration-150 ml-1">
+                    Sign Up
+                </button>
+            </div>
+            
+            <div id="auth-message-box" class="mt-4 p-4 bg-red-800 text-white rounded-xl hidden"></div>
+        </div>
+    </div>
+    
+    <div id="chatbot-container" class="w-screen h-screen flex flex-col bg-secondary-chat shadow-2xl overflow-hidden hidden transition-colors duration-300 z-50">
+        
+        <header class="p-4 bg-indigo-700 text-white shadow-xl flex justify-between items-center">
+            <h1 class="text-2xl font-bold flex items-center tracking-wide">
+                <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.001 12.001 0 002.944 12c.002 4.93 2.072 9.47 5.378 12h7.356c3.306-2.53 5.376-7.07 5.378-12A12.001 12.001 0 0021.618 7.984z"></path></svg>
+                HR Assistant
+            </h1>
+            
+            <div class="flex items-center space-x-3">
+                
+                <button onclick="toggleTimeOffModal()" class="p-2 rounded-full hover:bg-indigo-600 transition duration-150 transform hover:scale-105" title="Request Time Off">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </button>
+
+                <button onclick="toggleHistorySidebar()" class="p-2 rounded-full hover:bg-indigo-600 transition duration-150" title="Toggle History">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                </button>
+
+                <button id="theme-toggle" onclick="toggleTheme()" class="p-2 rounded-full hover:bg-indigo-600 transition duration-150" title="Toggle Theme">
+                    <svg id="moon-icon" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <svg id="sun-icon" class="w-7 h-7 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex flex-grow overflow-hidden">
+            
+            <aside id="history-sidebar" class="flex-shrink-0 w-0 md:w-80 bg-primary-chat border-r border-border-chat transition-all duration-300 overflow-y-auto overflow-x-hidden">
+                <div class="p-4 flex flex-col h-full">
+                    
+                    <h3 class="text-xl font-semibold text-indigo-400 mb-3 border-b border-gray-700 pb-2">Conversation History 💬</h3>
+                    <div id="history-list" class="flex-grow overflow-y-auto space-y-3 pb-4">
+                        </div>
+                    
+                    <h3 class="text-xl font-semibold text-green-400 mt-6 mb-3 border-b border-gray-700 pb-2">Time Off Approvals ✅</h3>
+                    <div id="approval-list" class="flex-shrink-0 overflow-y-auto space-y-3 pb-4 max-h-[30vh]">
+                        <p class="text-secondary-chat text-sm italic">No approved requests yet.</p>
+                    </div>
+
+                    <button onclick="clearHistory()" class="mt-6 w-full p-3 bg-red-700 hover:bg-red-800 text-white font-semibold rounded-xl transition duration-150 text-base">Clear All Data</button>
+                </div>
+            </aside>
+            <main id="chat-history" class="flex-grow p-6 overflow-y-auto space-y-5">
+                </main>
+        </div>
+
+        <div class="p-4 bg-primary-chat flex items-center transition-colors duration-300">
+            <input type="text" id="user-input" placeholder="Ask a question, e.g., 'What are HR's primary responsibilities?'" class="chat-input flex-grow p-4 mr-4 rounded-xl bg-secondary-chat border border-border-chat focus:outline-none focus:ring-3 focus:ring-indigo-400 text-secondary-chat placeholder-gray-400 transition duration-200 ease-in-out">
+            
+            <button id="voice-button" onclick="startVoiceInput()" class="p-4 mr-2 bg-indigo-500 hover:bg-indigo-600 text-white font-semibold rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed" title="Voice Input">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a4 4 0 01-4-4V5a4 4 0 118 0v2a4 4 0 01-4 4z"></path></svg>
+            </button>
+
+            <button id="send-button" onclick="sendMessage()" class="p-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg transition duration-150 ease-in-out transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </div>
+    </div>
+
+
+    <div id="time-off-modal" class="fixed inset-0 z-50 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center hidden transition-opacity duration-300">
+        <div class="w-full max-w-4xl p-8 modal-card rounded-3xl transform transition-transform duration-300 scale-95" role="dialog" aria-modal="true">
+            <h2 class="text-3xl font-extrabold text-center text-indigo-400 mb-8 flex items-center justify-center tracking-wide">
+                Request Time Off 🏖️
+            </h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <div class="p-6 modal-card rounded-2xl">
+                    <h3 class="text-xl font-bold mb-4 border-b border-gray-700 pb-2 text-indigo-300">Select Individual Dates</h3>
+                    
+                    <div class="flex justify-between items-center mb-6">
+                        <button onclick="changeMonth(-1)" class="p-2 rounded-full hover:bg-gray-700 text-indigo-400 hover:text-indigo-300 transition-colors duration-150" title="Previous Month">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </button>
+                        <span id="calendar-month-display" class="text-2xl font-extrabold text-white">November 2025</span>
+                        <button onclick="changeMonth(1)" class="p-2 rounded-full hover:bg-gray-700 text-indigo-400 hover:text-indigo-300 transition-colors duration-150" title="Next Month">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </button>
+                    </div>
+
+                    <div class="flex justify-between text-base font-bold text-gray-400 mb-3">
+                        <span class="calendar-cell text-center">S</span>
+                        <span class="calendar-cell text-center">M</span>
+                        <span class="calendar-cell text-center">T</span>
+                        <span class="calendar-cell text-center">W</span>
+                        <span class="calendar-cell text-center">T</span>
+                        <span class="calendar-cell text-center">F</span>
+                        <span class="calendar-cell text-center">S</span>
+                    </div>
+
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1 text-center">
+                        </div>
+
+                    <div class="mt-8 flex justify-around text-sm font-medium">
+                        <div class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full bg-indigo-500"></span><span>Selected Date</span></div>
+                        <div class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full bg-red-500"></span><span>Conflict (Other Leave)</span></div>
+                        <div class="flex items-center space-x-2"><span class="w-3 h-3 rounded-full border-2 border-indigo-500"></span><span>Today</span></div>
+                    </div>
+
+                    <button onclick="clearSelection()" class="mt-6 w-full p-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-xl transition duration-200">
+                        Clear Selection
+                    </button>
+                </div>
+
+                <div class="p-6 modal-card rounded-2xl">
+                    <h3 class="text-xl font-bold mb-6 border-b border-gray-700 pb-2 text-indigo-400">Request Summary</h3>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6 text-center">
+                        <div class="p-3 bg-gray-800/50 rounded-lg">
+                            <p class="text-sm text-gray-400 font-medium">Leave Span</p>
+                            <p class="text-lg font-bold mt-1" id="time-off-span">N/A</p>
+                        </div>
+                        <div class="p-3 bg-gray-800/50 rounded-lg">
+                            <p class="text-sm text-gray-400 font-medium">Total Days Selected</p>
+                            <p class="text-4xl font-extrabold text-teal-400 mt-0" id="time-off-total-days">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-5">
+                        <label for="leave-type" class="block text-sm font-medium text-gray-300 mb-2">Leave Type</label>
+                        <select id="leave-type" class="w-full p-3 rounded-xl bg-gray-700 border border-gray-600 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150">
+                            <option value="Vacation">Vacation / Annual Leave</option>
+                            <option value="Sick">Sick Leave</option>
+                            <option value="Personal">Personal Day</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-6">
+                        <label for="reason" class="block text-sm font-medium text-gray-300 mb-2 flex justify-between items-center">
+                            Reason 
+                            <span class="text-xs text-indigo-400 font-semibold cursor-pointer hover:text-indigo-300 transition-colors duration-150 flex items-center" onclick="aiDraftReason()">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                AI Draft
+                            </span>
+                        </label>
+                        <textarea id="reason" rows="4" placeholder="Briefly describe the reason for your leave, or let AI draft it for you." class="w-full p-3 rounded-xl bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-150"></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-4">
+                        <button onclick="toggleTimeOffModal()" class="p-3 w-32 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-xl transition duration-200">
+                            Cancel
+                        </button>
+                        <button id="submit-time-off" onclick="submitTimeOffRequest()" disabled class="p-3 w-48 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-lg shadow-teal-500/50 transition duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed">
+                            Submit Request
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module">
+        
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        
+        // --- CONSTANTS & INITIALIZATION (Unchanged) ---
+        const CHAT_MODEL = 'gemini-2.5-flash-preview-09-2025';
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${CHAT_MODEL}:generateContent`;
+        const API_KEY = "AIzaSyAY1F0u3wwEX_8y2qkmsXgj_-lFrPpFuB4"; 
+        const CONFLICT_DATE_STR = '2025-11-26'; // Specific conflict date
+
+        // --- MANDATORY ENVIRONMENT VARIABLES ---
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+        let db, auth;
+        let userId = 'anon_user'; 
+        let chatHistory = []; 
+        let isLoginForm = true;
+        let isLoggedIn = false;
+        let isHistoryOpen = false;
+        
+        // --- MODIFIED TIME OFF STATE FOR MULTI-SELECT AND DYNAMIC CALENDAR ---
+        let selectedDates = []; // Array of 'YYYY-MM-DD' strings
+        let currentDate = new Date(2025, 10, 1); // Start at November 1, 2025
+        
+        // --- DOM REFERENCES ---
+        const authContainer = document.getElementById('auth-container');
+        const chatbotContainer = document.getElementById('chatbot-container');
+        const authTitle = document.getElementById('auth-title');
+        const nameField = document.getElementById('name-field');
+        const authButton = document.getElementById('auth-button');
+        const toggleLink = document.getElementById('toggle-link');
+        const toggleText = document.getElementById('toggle-text');
+        const forgotPasswordLink = document.getElementById('forgot-password-link');
+        const authMessageBox = document.getElementById('auth-message-box');
+        const chatHistoryElement = document.getElementById('chat-history');
+        const userInputElement = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        const historySidebar = document.getElementById('history-sidebar');
+        const historyListElement = document.getElementById('history-list');
+        const moonIcon = document.getElementById('moon-icon');
+        const sunIcon = document.getElementById('sun-icon');
+        const bodyElement = document.body;
+        
+        // NEW MODAL REFS
+        const timeOffModal = document.getElementById('time-off-modal'); 
+        const timeOffCalendarContainer = document.getElementById('calendar-grid');
+        const timeOffTotalDays = document.getElementById('time-off-total-days');
+        const timeOffSubmitButton = document.getElementById('submit-time-off');
+        const timeOffReasonInput = document.getElementById('reason');
+        const timeOffLeaveType = document.getElementById('leave-type');
+
+        // NEW APPROVAL REF
+        const approvalListElement = document.getElementById('approval-list');
+
+        // --- FIREBASE / AUTH INITIALIZATION (Unchanged) ---
+        if (firebaseConfig) {
+            setLogLevel('Debug');
+            const app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            async function initializeAuth() {
+                try {
+                    if (initialAuthToken) {
+                        await signInWithCustomToken(auth, initialAuthToken);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                    console.log("Firebase Auth initialized.");
+                    userId = auth.currentUser?.uid || crypto.randomUUID();
+                } catch (error) {
+                    console.error("Firebase Auth failed:", error);
+                    userId = crypto.randomUUID(); // Fallback
+                }
+            }
+            initializeAuth();
+        } else {
+            console.warn("Firebase configuration not found. Running in standalone mode.");
+        }
+        
+        // --- AUTH UI LOGIC (Unchanged) ---
+        window.toggleForm = function() {
+            isLoginForm = !isLoginForm;
+            authMessageBox.classList.add('hidden');
+            if (isLoginForm) {
+                authTitle.textContent = 'Welcome Back';
+                nameField.classList.add('hidden');
+                authButton.textContent = 'LOG IN';
+                toggleText.textContent = "Don't have an account?";
+                toggleLink.textContent = 'Sign Up';
+                forgotPasswordLink.classList.remove('hidden');
+            } else {
+                authTitle.textContent = 'Create Account';
+                nameField.classList.remove('hidden');
+                authButton.textContent = 'SIGN UP';
+                toggleText.textContent = "Already have an account?";
+                toggleLink.textContent = 'Log In';
+                forgotPasswordLink.classList.add('hidden');
+            }
+        }
+        
+        window.handleAuthSubmit = function() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (!email || !password) {
+                 authMessageBox.textContent = "Please enter both email and password.";
+                 authMessageBox.classList.remove('hidden');
+                 return;
+            }
+            
+            authMessageBox.classList.add('hidden');
+            authMessageBox.textContent = "";
+
+            authButton.textContent = isLoginForm ? 'Logging In...' : 'Signing Up...';
+            
+            // Simulate API delay
+            setTimeout(() => {
+                isLoggedIn = true;
+                window.currentUserEmail = email; 
+                
+                authContainer.classList.add('opacity-0');
+                
+                setTimeout(() => {
+                    authContainer.classList.add('hidden');
+                    chatbotContainer.classList.remove('hidden');
+                    userInputElement.focus();
+                    
+                    loadHistoryList(); 
+                    loadApprovalStatus(); 
+                }, 300); 
+                
+            }, 1000); 
+        }
+
+        // --- THEME CUSTOMIZATION (Unchanged) ---
+        window.toggleTheme = function() {
+            const isDark = bodyElement.classList.contains('dark-theme');
+            if (isDark) {
+                bodyElement.classList.remove('dark-theme');
+                bodyElement.classList.add('light-theme');
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'light');
+            } else {
+                bodyElement.classList.remove('light-theme');
+                bodyElement.classList.add('dark-theme');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        function applyInitialTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (savedTheme === 'light') {
+                bodyElement.classList.add('light-theme');
+                bodyElement.classList.remove('dark-theme');
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
+            } else {
+                bodyElement.classList.add('dark-theme');
+                bodyElement.classList.remove('light-theme');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        }
+
+
+        // --- CHAT HISTORY MANAGEMENT (Refined History Item Styling) ---
+        function saveChatHistory(history) {
+            if (history.length === 0) return;
+            const currentConversations = JSON.parse(localStorage.getItem('chatConversations') || '[]');
+            const newConversation = {
+                id: Date.now(),
+                title: history[0].parts[0].text.substring(0, 30) + (history[0].parts[0].text.length > 30 ? '...' : ''),
+                timestamp: new Date().toISOString(),
+                messages: history
+            };
+
+            currentConversations.unshift(newConversation); 
+            localStorage.setItem('chatConversations', JSON.stringify(currentConversations.slice(0, 10)));
+            loadHistoryList();
+        }
+        
+        function loadHistoryList() {
+            historyListElement.innerHTML = ''; 
+            const conversations = JSON.parse(localStorage.getItem('chatConversations') || '[]');
+            
+            if (conversations.length === 0) {
+                historyListElement.innerHTML = '<p class="text-secondary-chat text-sm italic">No past conversations.</p>';
+                return;
+            }
+
+            conversations.forEach(conv => {
+                const item = document.createElement('button');
+                const date = new Date(conv.timestamp).toLocaleDateString();
+                // UPDATED CLASS FOR BETTER HOVER/LOOK
+                item.className = 'w-full text-left p-3 rounded-xl bg-gray-700/50 hover:bg-indigo-700/40 text-white transition-colors duration-150 truncate border border-gray-600/50 hover:border-indigo-500/50 shadow-md';
+                item.innerHTML = `<p class="font-medium">${conv.title}</p><p class="text-xs opacity-75">${date}</p>`;
+                item.onclick = () => loadSpecificHistory(conv.id);
+                historyListElement.appendChild(item);
+            });
+        }
+        
+        function loadSpecificHistory(conversationId) {
+            const conversations = JSON.parse(localStorage.getItem('chatConversations') || '[]');
+            const conversation = conversations.find(c => c.id === conversationId);
+
+            if (conversation) {
+                chatHistory = conversation.messages;
+                chatHistoryElement.innerHTML = ''; 
+                conversation.messages.forEach(msg => {
+                    const text = msg.parts[0].text;
+                    appendMessage(msg.role, text); 
+                });
+                if (isHistoryOpen) toggleHistorySidebar(); 
+            }
+        }
+        
+        window.clearHistory = function() {
+            if (confirm("Are you sure you want to clear all chat history and time off records?")) {
+                localStorage.removeItem('chatConversations');
+                localStorage.removeItem('timeOffApprovals'); 
+                chatHistory = []; 
+                chatHistoryElement.innerHTML = ''; 
+                loadHistoryList(); 
+                loadApprovalStatus(); 
+                appendMessage('assistant', 'Chat history and time off records cleared. How can I assist you today?');
+            }
+        }
+        
+        window.toggleHistorySidebar = function() {
+            isHistoryOpen = !isHistoryOpen;
+            if (isHistoryOpen) {
+                historySidebar.style.width = '320px'; 
+                historySidebar.classList.remove('w-0');
+            } else {
+                historySidebar.style.width = '0';
+                historySidebar.classList.add('w-0');
+            }
+        }
+        
+        // --- APPROVAL LOGIC AND DISPLAY (Modified for multi-date selection) ---
+
+        function logTimeOffApproval(requestData) {
+            const approvals = JSON.parse(localStorage.getItem('timeOffApprovals') || '[]');
+            
+            // Generate a mock approval message
+            const approvalRecord = {
+                id: Date.now(),
+                ...requestData,
+                status: 'Approved',
+                approvedBy: 'HR Admin Bot',
+                approvedDate: new Date().toISOString()
+            };
+
+            approvals.unshift(approvalRecord);
+            localStorage.setItem('timeOffApprovals', JSON.stringify(approvals));
+            
+            loadApprovalStatus(); 
+        }
+        
+        function loadApprovalStatus() {
+            approvalListElement.innerHTML = '';
+            const approvals = JSON.parse(localStorage.getItem('timeOffApprovals') || '[]');
+            
+            if (approvals.length === 0) {
+                approvalListElement.innerHTML = '<p class="text-secondary-chat text-sm italic">No approved requests yet.</p>';
+                return;
+            }
+            
+            approvals.forEach(record => {
+                const dates = record.selectedDates || []; // Use selectedDates array
+                const approvedDate = new Date(record.approvedDate).toLocaleDateString();
+
+                let dateRange = 'N/A';
+                if (dates.length > 0) {
+                    const start = new Date(dates[0]).toLocaleDateString();
+                    const end = dates.length > 1 ? new Date(dates[dates.length - 1]).toLocaleDateString() : start;
+                    dateRange = dates.length > 1 ? `${start} - ${end}` : start;
+                }
+                
+                const item = document.createElement('div');
+                item.className = 'w-full p-3 rounded-xl bg-teal-800/50 border border-teal-600/50 text-white transition-colors duration-150 shadow-md hover:shadow-lg';
+                item.innerHTML = `
+                    <p class="font-bold text-teal-400">✅ Approved: ${record.leaveType}</p>
+                    <p class="text-sm">Days: ${record.totalDays} (${dateRange}${dates.length > 1 ? ' (Multi-Day)' : ''})</p>
+                    <p class="text-xs text-gray-400">on ${approvedDate} by ${record.approvedBy}</p>
+                `;
+                approvalListElement.appendChild(item);
+            });
+        }
+
+
+        // --- TIME OFF MODAL LOGIC (Modified for multi-select and dynamic calendar) ---
+        
+        window.toggleTimeOffModal = function() {
+            if (timeOffModal.classList.contains('hidden')) {
+                // Reset calendar view to November 2025 and clear selection when opening
+                clearSelection(); 
+                currentDate = new Date(2025, 10, 1); // Reset to November 1, 2025 (Month 10 is Nov)
+                renderCalendar(); // Initial render
+                timeOffModal.classList.remove('hidden');
+                setTimeout(() => {
+                    timeOffModal.style.opacity = '1';
+                    timeOffModal.querySelector('.modal-card').style.transform = 'scale(1)';
+                }, 10); 
+            } else {
+                timeOffModal.style.opacity = '0';
+                timeOffModal.querySelector('.modal-card').style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    timeOffModal.classList.add('hidden');
+                }, 300);
+            }
+        }
+        
+        window.clearSelection = function() {
+            selectedDates = [];
+            // Clear visual state on currently rendered month
+            timeOffCalendarContainer.querySelectorAll('.selected').forEach(el => {
+                el.classList.remove('selected');
+            });
+            updateSummary();
+            timeOffSubmitButton.disabled = true;
+            timeOffSubmitButton.textContent = 'Submit Request';
+        }
+        
+        // NEW: Function to render the calendar grid dynamically
+        function renderCalendar() {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth(); 
+            
+            // Set the month display text
+            const monthName = currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+            document.getElementById('calendar-month-display').textContent = monthName;
+
+            // Get the day of the week for the 1st of the month (0=Sun, 6=Sat)
+            const firstDayOfMonth = new Date(year, month, 1).getDay(); 
+            // Get the number of days in the month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            const todayStr = new Date().toISOString().slice(0, 10);
+
+            timeOffCalendarContainer.innerHTML = ''; // Clear existing content
+
+            // 1. Add padding days
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'calendar-cell p-2 text-gray-600';
+                timeOffCalendarContainer.appendChild(emptyCell);
+            }
+
+            // 2. Add actual day cells
+            for (let day = 1; day <= daysInMonth; day++) {
+                const date = new Date(year, month, day);
+                const dateStr = date.toISOString().slice(0, 10);
+                
+                const cell = document.createElement('div');
+                cell.className = 'calendar-cell p-2 rounded-full transition-colors duration-150';
+                cell.dataset.date = dateStr;
+                cell.textContent = day;
+                
+                let isConflict = false;
+                // Specific conflict check
+                if (dateStr === CONFLICT_DATE_STR) {
+                    isConflict = true;
+                }
+                
+                // Styling and interactivity
+                if (isConflict) {
+                    cell.classList.add('conflict');
+                    cell.classList.remove('cursor-pointer');
+                } else {
+                    cell.classList.add('cursor-pointer', 'hover:bg-gray-700');
+                    cell.setAttribute('onclick', 'selectDate(this)');
+                }
+
+                // Today check
+                if (dateStr === todayStr) {
+                    cell.classList.add('today');
+                }
+
+                // Selected check (must be applied even if navigating back)
+                if (selectedDates.includes(dateStr)) {
+                    cell.classList.add('selected');
+                }
+
+                timeOffCalendarContainer.appendChild(cell);
+            }
+            // Do not call updateSummary here to avoid recursion, it is called separately when needed
+        }
+        
+        // NEW: Function to navigate between months
+        window.changeMonth = function(offset) {
+            const newMonth = currentDate.getMonth() + offset;
+            currentDate.setMonth(newMonth);
+            renderCalendar();
+        }
+
+        function updateSummary() {
+            // Rerender the calendar to ensure selected dates are visually correct after a selection change
+            renderCalendar(); 
+            
+            const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric' });
+            
+            // The total days is simply the number of selected dates
+            const dayCount = selectedDates.length;
+            
+            timeOffTotalDays.textContent = dayCount;
+            timeOffSubmitButton.disabled = dayCount === 0;
+
+            if (dayCount > 0) {
+                // Sort dates to ensure the span is correct
+                selectedDates.sort();
+                
+                const startDateStr = selectedDates[0];
+                const endDateStr = selectedDates[selectedDates.length - 1];
+                
+                // Add T00:00:00 to avoid timezone shift issues with date-only strings
+                const startDate = new Date(startDateStr + 'T00:00:00');
+                const endDate = new Date(endDateStr + 'T00:00:00');
+
+                const spanDisplay = dayCount > 1 
+                    ? `${formatter.format(startDate)} - ${formatter.format(endDate)}`
+                    : formatter.format(startDate);
+                    
+                document.getElementById('time-off-span').textContent = spanDisplay;
+                
+                timeOffSubmitButton.textContent = `Submit Request (${dayCount} Day${dayCount !== 1 ? 's' : ''})`;
+            } else {
+                document.getElementById('time-off-span').textContent = 'N/A';
+                timeOffSubmitButton.textContent = 'Submit Request';
+            }
+        }
+        
+        window.selectDate = function(dayElement) {
+            // Check for conflict first (although renderCalendar already removed the onclick attribute)
+            if (dayElement.classList.contains('conflict')) {
+                return;
+            }
+            
+            const dateStr = dayElement.dataset.date;
+            const index = selectedDates.indexOf(dateStr);
+
+            if (index > -1) {
+                // Deselect: remove the date string from the array
+                selectedDates.splice(index, 1);
+            } else {
+                // Select: add the date string to the array
+                selectedDates.push(dateStr);
+            }
+            
+            updateSummary();
+        }
+
+        window.aiDraftReason = function() {
+            timeOffReasonInput.value = "Requesting annual leave to recharge and spend time with family. I will ensure all critical tasks are covered before my departure and have notified my team lead.";
+        }
+
+        window.submitTimeOffRequest = function() {
+            const totalDays = parseInt(timeOffTotalDays.textContent);
+            if (totalDays === 0) {
+                alert("Please select at least one day for your time off request.");
+                return;
+            }
+            
+            const leaveType = timeOffLeaveType.value;
+            const reason = timeOffReasonInput.value.trim();
+
+            if (reason.length < 10) {
+                 alert("Please provide a more detailed reason for your time off request.");
+                 return;
+            }
+            
+            const requestData = {
+                selectedDates: [...selectedDates].sort(), // Send sorted array of selected dates
+                totalDays: totalDays,
+                leaveType: leaveType,
+                reason: reason,
+                submittedBy: window.currentUserEmail || 'unknown'
+            };
+
+            console.log("Time Off Request Submitted:", requestData);
+
+            logTimeOffApproval(requestData);
+
+            alert(`✅ Success! Your request for ${totalDays} day(s) of ${leaveType} has been **APPROVED** immediately for testing purposes.`);
+            
+            clearSelection();
+            timeOffReasonInput.value = '';
+            toggleTimeOffModal();
+        }
+
+        // --- VOICE INPUT (Unchanged) ---
+        let recognition;
+        
+        window.startVoiceInput = function() {
+            if (!('webkitSpeechRecognition' in window)) {
+                alert("Sorry, your browser does not support Speech Recognition. Please use Google Chrome.");
+                return;
+            }
+            
+            sendButton.disabled = true;
+            userInputElement.disabled = true;
+            const voiceButton = document.getElementById('voice-button');
+            voiceButton.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
+            voiceButton.classList.add('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
+            
+            if (!recognition) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.interimResults = false;
+                recognition.lang = 'en-US';
+            }
+            
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                userInputElement.value = transcript;
+                recognition.stop();
+                sendMessage(); 
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                alert('Voice input error: ' + event.error);
+            };
+
+            recognition.onend = function() {
+                voiceButton.classList.remove('bg-red-500', 'hover:bg-red-600', 'animate-pulse');
+                voiceButton.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
+                sendButton.disabled = false;
+                userInputElement.disabled = false;
+                userInputElement.focus();
+            };
+
+            recognition.start();
+        }
+
+
+        // --- CHATBOT CORE LOGIC (Unchanged) ---
+        const cleanUri = (uri) => {
+            try {
+                const url = new URL(uri);
+                return url.hostname;
+            } catch (e) {
+                return uri;
+            }
+        };
+
+        async function exponentialBackoffFetch(url, options, retries = 0) {
+            const MAX_RETRIES = 5;
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return await response.json();
+            } catch (error) {
+                if (retries < MAX_RETRIES) {
+                    const delay = Math.pow(2, retries) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    return exponentialBackoffFetch(url, options, retries + 1);
+                } else {
+                    console.error("Fetch failed after multiple retries.", error);
+                    throw new Error("Failed to connect to the assistant. Please try again later.");
+                }
+            }
+        }
+
+        function appendMessage(role, text, sources = []) {
+            const messageContainer = document.createElement('div');
+            messageContainer.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'}`;
+
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `p-4 rounded-3xl max-w-xs sm:max-w-md shadow-lg transition-colors duration-300 ${
+                role === 'user'
+                    ? 'user-bubble text-white rounded-br-lg'
+                    : 'assistant-bubble text-secondary-chat rounded-tl-lg'
+            }`;
+
+            const messageText = document.createElement('p');
+            messageText.className = 'mt-1 whitespace-pre-wrap';
+            messageText.innerHTML = text;
+            messageBubble.appendChild(messageText);
+
+            if (sources.length > 0) {
+                const citationContainer = document.createElement('div');
+                citationContainer.className = 'mt-3 pt-3 border-t border-gray-600/50 text-xs text-gray-400 space-y-1';
+                citationContainer.innerHTML = `<p class="font-bold">Sources:</p>` +
+                    sources.map((src, index) =>
+                        `<p class="truncate"><a href="${src.uri}" target="_blank" class="hover:text-indigo-400 transition-colors">${index + 1}. ${src.title || cleanUri(src.uri)}</a></p>`
+                    ).join('');
+                messageBubble.appendChild(citationContainer);
+            }
+
+            messageContainer.appendChild(messageBubble);
+            chatHistoryElement.appendChild(messageContainer);
+            chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
+        }
+
+        function toggleLoading(show) {
+            if (show) {
+                const loadingElement = document.createElement('div');
+                loadingElement.id = 'loading-indicator';
+                loadingElement.className = 'flex justify-start';
+                loadingElement.innerHTML = `
+                    <div class="assistant-bubble p-4 rounded-3xl max-w-xs shadow-md flex items-center rounded-tl-lg">
+                        <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-indigo-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span class="text-secondary-chat">Thinking...</span>
+                    </div>
+                `;
+                chatHistoryElement.appendChild(loadingElement);
+                chatHistoryElement.scrollTop = chatHistoryElement.scrollHeight;
+                sendButton.disabled = true;
+                userInputElement.disabled = true;
+                document.getElementById('voice-button').disabled = true;
+            } else {
+                const loader = document.getElementById('loading-indicator');
+                if (loader) {
+                    loader.remove();
+                }
+                sendButton.disabled = false;
+                userInputElement.disabled = false;
+                document.getElementById('voice-button').disabled = false;
+                userInputElement.focus();
+            }
+        }
+
+        window.sendMessage = async function() {
+            const userQuery = userInputElement.value.trim();
+            if (!userQuery) return;
+            if (!isLoggedIn) {
+                authMessageBox.textContent = "Please log in to start chatting.";
+                authMessageBox.classList.remove('hidden');
+                return;
+            }
+
+            appendMessage('user', userQuery);
+            userInputElement.value = '';
+            
+            const isNewConversation = chatHistory.length === 0;
+
+            chatHistory.push({ role: "user", parts: [{ text: userQuery }] });
+
+            toggleLoading(true);
+
+            try {
+                const systemPrompt = "You are a dedicated and professional Human Resources (HR) Assistant. Your goal is to answer employee questions about **HR responsibilities, company contribution, policies, and benefits** using clear, concise, and easy-to-understand language. When answering, prioritize the core HR function and provide encouraging support. Base your answers *only* on the search results provided. Do not mention that you are using Google Search or external sources.";
+
+                const payload = {
+                    contents: chatHistory, 
+                    tools: [{ "google_search": {} }], 
+                    systemInstruction: { parts: [{ text: systemPrompt }] },
+                };
+
+                const response = await exponentialBackoffFetch(`${API_URL}?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const candidate = response.candidates?.[0];
+                let assistantText = "I apologize, but I couldn't find relevant information to answer your question. Please try rephrasing your query.";
+                let sources = [];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    assistantText = candidate.content.parts[0].text;
+
+                    const groundingMetadata = candidate.groundingMetadata;
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title);
+                    }
+                }
+
+                appendMessage('assistant', assistantText, sources);
+                
+                chatHistory.push({ role: "model", parts: [{ text: assistantText }] });
+                
+                if (isNewConversation) {
+                    saveChatHistory(chatHistory);
+                }
+
+
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                appendMessage('assistant', `Error: I encountered an issue connecting to the HR data. Please try again. (${error.message})`);
+            } finally {
+                toggleLoading(false);
+            }
+        }
+        
+        // Add initial form setup and theme application on load
+        window.onload = () => {
+             isLoginForm = false; 
+             toggleForm(); 
+             
+             applyInitialTheme();
+        };
+
+    </script>
+</body>
+</html>
+
+
+
+
+ 
+
+
